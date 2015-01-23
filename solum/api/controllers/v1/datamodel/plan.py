@@ -96,6 +96,9 @@ class Plan(api_types.Base):
     services = [ServiceReference]
     """List of services needed by the plan."""
 
+    trigger_uri = wtypes.text
+    """The trigger uri used to trigger the build of the plan"""
+
     parameters = {wtypes.text: api_types.MultiType(wtypes.text,
                                                    six.integer_types,
                                                    six.types.BooleanType,
@@ -132,6 +135,7 @@ class Plan(api_types.Base):
                        'characteristics': ['python_build_service']}],
                    project_id='1dae5a09ef2b4d8cbf3594b0eb4f6b94',
                    user_id='55f41cf46df74320b9486a35f5d28a11',
+                   trigger_uri='http://example.com/v1/triggers/1abc234',
                    description='A plan with no services or artifacts shown')
 
     @classmethod
@@ -141,6 +145,7 @@ class Plan(api_types.Base):
         json['uri'] = '%s/v1/%s/%s' % (host_url, m.__resource__, m.uuid)
         if m.raw_content is not None:
             json.update(m.raw_content)
+        json['trigger_uri'] = '%s/v1/triggers/%s' % (host_url, m.trigger_id)
         del json['id']
         return cls(**(json))
 
