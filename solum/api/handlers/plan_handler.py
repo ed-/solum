@@ -132,6 +132,68 @@ class PlanHandler(handler.Handler):
         """Return all plans."""
         return objects.registry.PlanList.get_all(self.context)
 
+    def trigger_workflow(self, trigger_id, commit_sha='',
+                         status_url=None, collab_url=None):
+        """Get trigger by trigger id and start git workflow associated."""
+        # Note: self.context will be None at this point as this is a
+        # non-authenticated request.
+        plan_obj = objects.registry.Plan.get_by_trigger_id(None, trigger_id)
+        # get the trust context and authenticate it.
+        try:
+            self.context = self._context_from_trust_id(plan_obj.trust_id)
+        except exception.AuthorizationFailure as auth_ex:
+            LOG.warn(auth_ex)
+            return
+
+        artifacts = plan_obj.raw_content.get('artifacts', [])
+        for arti in artifacts:
+            if repo_utils.verify_artifact(arti, collab_url):
+                self._build_artifact(assem=db_obj, artifact=arti,
+                                     commit_sha=commit_sha,
+                                     status_url=status_url)
+
+
+    def _build_artifact(self, assem, artifact, verb='build', commit_sha='',
+                        status_url=None):
+
+        # This is a tempory hack so we don't need the build client
+        # in the requirements.
+        image = objects.registry.Image()
+        image.name = artifact['name']
+        image.source_uri = artifact['content']['href']
+        image.base_image_id = artifact.get('language_pack', 'auto')
+        image.source_format = artifact.get('artifact_type',
+                                           CONF.api.source_format)
+        image.image_format = CONF.api.image_format
+        image.uuid = str(uuid.uuid4())
+        image.user_id = self.context.user
+        image.project_id = self.context.tenant
+        image.state = IMAGE_STATES.PENDING
+        image.create(self.context)
+        test_cmd = artifact.get('unittest_cmd')
+        repo_token = artifact.get('repo_token')
+
+        git_info = {
+            'source_url': image.source_uri,
+            'commit_sha': commit_sha,
+            'repo_token': repo_token,
+            'status_url': status_url
+        }
+
+        if test_cmd:
+            repo_utils.send_status(0, status_url, repo_token, pending=True)
+
+        api.API(context=self.context).perform_action(
+            verb=verb,
+            build_id=image.id,
+            git_info=git_info,
+            name=image.name,
+            base_image_id=image.base_image_id,
+            source_format=image.source_format,
+            image_format=image.image_format,
+            assembly_id=assem.id,
+            test_cmd=test_cmd)
+
     def _create_params(self, plan_id, user_params, sys_params):
         param_obj = objects.registry.Parameter()
         param_obj.plan_id = plan_id

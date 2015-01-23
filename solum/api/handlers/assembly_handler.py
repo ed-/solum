@@ -65,30 +65,6 @@ class AssemblyHandler(handler.Handler):
         kc = solum_keystoneclient.KeystoneClientV3(cntx)
         return kc.context
 
-    def trigger_workflow(self, trigger_id, commit_sha='',
-                         status_url=None, collab_url=None):
-        """Get trigger by trigger id and start git workflow associated."""
-        # Note: self.context will be None at this point as this is a
-        # non-authenticated request.
-        db_obj = objects.registry.Assembly.get_by_trigger_id(None,
-                                                             trigger_id)
-        # get the trust context and authenticate it.
-        try:
-            self.context = self._context_from_trust_id(db_obj.trust_id)
-        except exception.AuthorizationFailure as auth_ex:
-            LOG.warn(auth_ex)
-            return
-
-        plan_obj = objects.registry.Plan.get_by_id(self.context,
-                                                   db_obj.plan_id)
-
-        artifacts = plan_obj.raw_content.get('artifacts', [])
-        for arti in artifacts:
-            if repo_utils.verify_artifact(arti, collab_url):
-                self._build_artifact(assem=db_obj, artifact=arti,
-                                     commit_sha=commit_sha,
-                                     status_url=status_url)
-
     def update(self, id, data):
         """Modify a resource."""
         updated = objects.registry.Assembly.safe_update(self.context, id, data)
@@ -180,3 +156,7 @@ class AssemblyHandler(handler.Handler):
     def get_all(self):
         """Return all assemblies, based on the query provided."""
         return objects.registry.AssemblyList.get_all(self.context)
+
+    def get_all_by_plan_id(self, plan_id):
+        """Return all assemblies built with the provided plan."""
+        return self.get_all().filter_by(plan_id=plan_id)

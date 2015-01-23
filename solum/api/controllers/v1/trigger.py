@@ -17,8 +17,8 @@ from oslo.config import cfg
 import pecan
 from pecan import rest
 
-from solum.api.handlers import assembly_handler
 from solum.api.handlers import pipeline_handler
+from solum.api.handlers import plan_handler
 from solum.common import exception
 from solum.openstack.common import log as logging
 
@@ -78,7 +78,7 @@ class TriggerController(rest.RestController):
             raise exception.BadRequest(reason=info_msg)
 
         try:
-            handler = assembly_handler.AssemblyHandler(None)
+            handler = plan_handler.PlanHandler(None)
             handler.trigger_workflow(trigger_id, commit_sha, status_url,
                                      collab_url)
         except exception.ResourceNotFound:
