@@ -33,7 +33,7 @@ class Plan(sql.Base, abstract.Plan):
     name = sqlalchemy.Column(sqlalchemy.String(255))
     description = sqlalchemy.Column(sqlalchemy.String(255))
     raw_content = sqlalchemy.Column(sql.YAMLEncodedDict(2048))
-    trigger_id = sa.Column(sa.String(36))
+    trigger_id = sqlalchemy.Column(sqlalchemy.String(36))
 
     @classmethod
     def _raise_trigger_not_found(cls, item_id):
@@ -45,7 +45,7 @@ class Plan(sql.Base, abstract.Plan):
         try:
             session = sql.Base.get_session()
             return session.query(cls).filter_by(trigger_id=trigger_id).one()
-        except sa.orm.exc.NoResultFound:
+        except sqlalchemy.orm.exc.NoResultFound:
             cls._raise_trigger_not_found(trigger_id)
 
     def _non_updatable_fields(self):
