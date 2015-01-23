@@ -33,9 +33,24 @@ class Plan(sql.Base, abstract.Plan):
     name = sqlalchemy.Column(sqlalchemy.String(255))
     description = sqlalchemy.Column(sqlalchemy.String(255))
     raw_content = sqlalchemy.Column(sql.YAMLEncodedDict(2048))
+    trigger_id = sa.Column(sa.String(36))
+
+    @classmethod
+    def _raise_trigger_not_found(cls, item_id):
+        """Raise a NotFound exception."""
+        raise exception.ResourceNotFound(id=item_id, name='trigger')
+
+    @classmethod
+    def get_by_trigger_id(cls, context, trigger_id):
+        try:
+            session = sql.Base.get_session()
+            return session.query(cls).filter_by(trigger_id=trigger_id).one()
+        except sa.orm.exc.NoResultFound:
+            cls._raise_trigger_not_found(trigger_id)
 
     def _non_updatable_fields(self):
         return set(('uuid', 'id', 'project_id'))
+
 
     def refined_content(self):
         if self.raw_content and self.uuid:
