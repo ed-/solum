@@ -148,12 +148,12 @@ class PlanHandler(handler.Handler):
         artifacts = plan_obj.raw_content.get('artifacts', [])
         for arti in artifacts:
             if repo_utils.verify_artifact(arti, collab_url):
-                self._build_artifact(assem=db_obj, artifact=arti,
+                self._build_artifact(plan_obj.id, artifact=arti,
                                      commit_sha=commit_sha,
                                      status_url=status_url)
 
 
-    def _build_artifact(self, assem, artifact, verb='build', commit_sha='',
+    def _build_artifact(self, plan_id, artifact, verb='build', commit_sha='',
                         status_url=None):
 
         # This is a tempory hack so we don't need the build client
@@ -182,6 +182,9 @@ class PlanHandler(handler.Handler):
 
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
+
+        # assemblyHandler.get_all_by_plan_id()
+        assemblies = objects.registry.Assembly.get_all_by_plan_id(plan_id)
 
         api.API(context=self.context).perform_action(
             verb=verb,

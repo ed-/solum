@@ -94,3 +94,11 @@ class AssemblyList(abstract.AssemblyList):
         mq = sql.model_query(context, Assembly).order_by(
             'updated_at desc', 'created_at desc')
         return AssemblyList(mq)
+
+    @classmethod
+    def get_all_by_plan_id(cls, context, p_id):
+        try:
+            session = sql.SolumBase.get_session()
+            return session.query(cls).filter_by(plan_id=p_id).all()
+        except exc.NoResultFound:
+            return None
