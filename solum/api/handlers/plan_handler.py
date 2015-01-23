@@ -21,10 +21,17 @@ import uuid
 from Crypto.PublicKey import RSA
 from oslo.config import cfg
 
+from solum.api.handlers import assembly_handler
 from solum.api.handlers import handler
 from solum.common import clients
+from solum.common import context
+from solum.common import exception
+from solum.common import repo_utils
+from solum.common import solum_keystoneclient
 from solum import objects
-
+from solum.objects import assembly
+from solum.objects import image
+from solum.openstack.common import log as logging
 
 API_PARAMETER_OPTS = [
     cfg.StrOpt('system_param_store',
@@ -41,6 +48,11 @@ API_PARAMETER_OPTS = [
 
 CONF = cfg.CONF
 CONF.register_opts(API_PARAMETER_OPTS, group='api')
+
+LOG = logging.getLogger(__name__)
+
+ASSEMBLY_STATES = assembly.States
+IMAGE_STATES = image.States
 
 sys_param_store = CONF.api.system_param_store
 
@@ -69,6 +81,8 @@ class PlanHandler(handler.Handler):
         """Delete existing plan."""
         db_obj = objects.registry.Plan.get_by_uuid(self.context, id)
         self._delete_params(db_obj.id)
+        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
+        ksc.delete_trust(db_obj.trust_id)
         db_obj.destroy(self.context)
 
     def create(self, data):
@@ -79,6 +93,7 @@ class PlanHandler(handler.Handler):
         db_obj.uuid = str(uuid.uuid4())
         db_obj.user_id = self.context.user
         db_obj.project_id = self.context.tenant
+        db_obj.trigger_id = str(uuid.uuid4())
         sys_params = {}
         deploy_keys = []
         for artifact in data.get('artifacts', []):
@@ -122,6 +137,11 @@ class PlanHandler(handler.Handler):
                 sys_params['REPO_DEPLOY_KEYS'] = repo_deploy_keys
         db_obj.raw_content = dict((k, v) for k, v in data.items()
                                   if k != 'parameters')
+
+        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
+        trust_context = ksc.create_trust_context()
+        db_obj.trust_id = trust_context.trust_id
+
         db_obj.create(self.context)
 
         user_params = data.get('parameters')
@@ -131,6 +151,38 @@ class PlanHandler(handler.Handler):
     def get_all(self):
         """Return all plans."""
         return objects.registry.PlanList.get_all(self.context)
+
+    def _context_from_trust_id(self, trust_id):
+        cntx = context.RequestContext(trust_id=trust_id)
+        kc = solum_keystoneclient.KeystoneClientV3(cntx)
+        return kc.context
+
+    def trigger_workflow(self, trigger_id, commit_sha='',
+                         status_url=None, collab_url=None):
+        """Get trigger by trigger id and start git workflow associated."""
+        # Note: self.context will be None at this point as this is a
+        # non-authenticated request.
+        plan_obj = objects.registry.Plan.get_by_trigger_id(None, trigger_id)
+        # get the trust context and authenticate it.
+        try:
+            self.context = self._context_from_trust_id(plan_obj.trust_id)
+        except exception.AuthorizationFailure as auth_ex:
+            LOG.warn(auth_ex)
+            return
+
+        artifacts = plan_obj.raw_content.get('artifacts', [])
+        for arti in artifacts:
+            if repo_utils.verify_artifact(arti, collab_url):
+                self._build_artifact(plan_obj, artifact=arti)
+
+    def _build_artifact(self, plan, artifact, verb='build'):
+
+        ahand = assembly_handler.AssemblyHandler(self.context)
+        plandata = {
+            'plan_id': plan.id,
+            'name': "%s-%s" % (plan.name, artifact['name']),
+            }
+        ahand.create(plandata)
 
     def _create_params(self, plan_id, user_params, sys_params):
         param_obj = objects.registry.Parameter()

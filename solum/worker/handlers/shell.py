@@ -124,6 +124,8 @@ class Handler(object):
         user_env['OS_AUTH_TOKEN'] = ctxt.auth_token
         user_env['OS_AUTH_URL'] = ctxt.auth_url
 
+        user_env['OS_USERNAME'] = ctxt.user_name
+
         if assembly_id is not None:
             assem = get_assembly_by_id(ctxt, assembly_id)
             user_env['ASSEMBLY_ID'] = str(assem.uuid)

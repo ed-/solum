@@ -25,7 +25,6 @@ import six
 from six import moves
 from sqlalchemy import exc as sqla_exc
 from sqlalchemy.ext import declarative
-from sqlalchemy.orm import exc
 from sqlalchemy import types
 
 from solum.common import exception
@@ -103,7 +102,7 @@ class SolumBase(models.TimestampMixin, models.ModelBase):
             session = SolumBase.get_session()
             result = session.query(cls).filter_by(id=item_id)
             return filter_by_project(context, result).one()
-        except exc.NoResultFound:
+        except sqla_exc.NoResultFound:
             cls._raise_not_found(item_id)
 
     @classmethod
@@ -112,7 +111,7 @@ class SolumBase(models.TimestampMixin, models.ModelBase):
             session = SolumBase.get_session()
             result = session.query(cls).filter_by(uuid=item_uuid)
             return filter_by_project(context, result).one()
-        except exc.NoResultFound:
+        except sqla_exc.NoResultFound:
             cls._raise_not_found(item_uuid)
 
     @classmethod
@@ -152,7 +151,7 @@ class SolumBase(models.TimestampMixin, models.ModelBase):
                     obj.update(data)
                     session.merge(obj)
             return obj
-        except exc.NoResultFound:
+        except sqla_exc.NoResultFound:
             cls._raise_not_found(id_or_uuid)
 
     def save(self, context):

@@ -17,17 +17,14 @@ import uuid
 from oslo.config import cfg
 
 from solum.api.handlers import handler
-from solum.common import context
-from solum.common import exception
 from solum.common import repo_utils
-from solum.common import solum_keystoneclient
 from solum.conductor import api as conductor_api
 from solum.deployer import api as deploy_api
 from solum import objects
 from solum.objects import assembly
 from solum.objects import image
 from solum.openstack.common import log as logging
-from solum.worker import api
+from solum.worker import api as worker_api
 
 # Register options for the service
 API_SERVICE_OPTS = [
@@ -60,35 +57,6 @@ class AssemblyHandler(handler.Handler):
         """Return an assembly."""
         return objects.registry.Assembly.get_by_uuid(self.context, id)
 
-    def _context_from_trust_id(self, trust_id):
-        cntx = context.RequestContext(trust_id=trust_id)
-        kc = solum_keystoneclient.KeystoneClientV3(cntx)
-        return kc.context
-
-    def trigger_workflow(self, trigger_id, commit_sha='',
-                         status_url=None, collab_url=None):
-        """Get trigger by trigger id and start git workflow associated."""
-        # Note: self.context will be None at this point as this is a
-        # non-authenticated request.
-        db_obj = objects.registry.Assembly.get_by_trigger_id(None,
-                                                             trigger_id)
-        # get the trust context and authenticate it.
-        try:
-            self.context = self._context_from_trust_id(db_obj.trust_id)
-        except exception.AuthorizationFailure as auth_ex:
-            LOG.warn(auth_ex)
-            return
-
-        plan_obj = objects.registry.Plan.get_by_id(self.context,
-                                                   db_obj.plan_id)
-
-        artifacts = plan_obj.raw_content.get('artifacts', [])
-        for arti in artifacts:
-            if repo_utils.verify_artifact(arti, collab_url):
-                self._build_artifact(assem=db_obj, artifact=arti,
-                                     commit_sha=commit_sha,
-                                     status_url=status_url)
-
     def update(self, id, data):
         """Modify a resource."""
         updated = objects.registry.Assembly.safe_update(self.context, id, data)
@@ -97,10 +65,6 @@ class AssemblyHandler(handler.Handler):
     def delete(self, id):
         """Delete a resource."""
         db_obj = objects.registry.Assembly.get_by_uuid(self.context, id)
-
-        # delete the trust.
-        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
-        ksc.delete_trust(db_obj.trust_id)
 
         conductor_api.API(context=self.context).update_assembly(
             db_obj.id, {'status': ASSEMBLY_STATES.DELETING})
@@ -115,13 +79,7 @@ class AssemblyHandler(handler.Handler):
         db_obj.uuid = str(uuid.uuid4())
         db_obj.user_id = self.context.user
         db_obj.project_id = self.context.tenant
-        db_obj.trigger_id = str(uuid.uuid4())
         db_obj.username = self.context.user_name
-
-        # create the trust_id and store it.
-        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
-        trust_context = ksc.create_trust_context()
-        db_obj.trust_id = trust_context.trust_id
 
         db_obj.status = ASSEMBLY_STATES.QUEUED
         db_obj.create(self.context)
@@ -138,7 +96,7 @@ class AssemblyHandler(handler.Handler):
                         status_url=None):
 
         # This is a tempory hack so we don't need the build client
-        # in the requirments.
+        # in the requirements.
         image = objects.registry.Image()
         image.name = artifact['name']
         image.source_uri = artifact['content']['href']
@@ -165,7 +123,7 @@ class AssemblyHandler(handler.Handler):
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
-        api.API(context=self.context).perform_action(
+        worker_api.API(context=self.context).perform_action(
             verb=verb,
             build_id=image.id,
             git_info=git_info,
@@ -180,3 +138,8 @@ class AssemblyHandler(handler.Handler):
     def get_all(self):
         """Return all assemblies, based on the query provided."""
         return objects.registry.AssemblyList.get_all(self.context)
+
+    def get_all_by_plan_id(self, plan_id):
+        """Return all assemblies built with the provided plan."""
+        return objects.registry.AssemblyList.get_all_by_plan_id(self.context,
+                                                                plan_id)

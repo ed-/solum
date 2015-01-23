@@ -23,6 +23,7 @@ from oslo.config import cfg
 from sqlalchemy import exc as sqla_exc
 import yaml
 
+from solum.api.handlers import assembly_handler
 from solum.common import catalog
 from solum.common import clients
 from solum.common import exception
@@ -210,9 +211,10 @@ class Handler(object):
                 return
         update_assembly(ctxt, assembly_id, {'status': STATES.DEPLOYING})
 
-        self._check_stack_status(ctxt, assembly_id, osc, stack_id)
+        self._check_stack_status(ctxt, assembly_id, osc, stack_id,
+                                 assem.plan_id)
 
-    def _check_stack_status(self, ctxt, assembly_id, osc, stack_id):
+    def _check_stack_status(self, ctxt, assembly_id, osc, stack_id, plan_id):
 
         wait_interval = cfg.CONF.deployer.wait_interval
         growth_factor = cfg.CONF.deployer.growth_factor
@@ -234,6 +236,7 @@ class Handler(object):
             return
 
         host_url = self._parse_server_url(stack)
+        assembly_ok = False
         if host_url is not None:
             du_is_up = False
             to_upd = {'status': STATES.WAITING_FOR_DOCKER_DU,
@@ -264,6 +267,7 @@ class Handler(object):
                 to_update = {'status': STATES.READY,
                              'application_uri': host_url}
                 update_assembly(ctxt, assembly_id, to_update)
+                assembly_ok = True
             else:
                 to_upd = {'status': STATES.ERROR_DU_CREATION}
                 update_assembly(ctxt, assembly_id, to_upd)
@@ -271,6 +275,12 @@ class Handler(object):
             LOG.exception("Could not parse url from heat stack.")
             update_assembly(ctxt, assembly_id,
                             {'status': STATES.ERROR})
+        if assembly_ok:
+            ahand = assembly_handler.AssemblyHandler(ctxt)
+            others = [a.uuid for a in ahand.get_all_by_plan_id(plan_id)]
+            if others is not None:
+                for other_assembly_id in others:
+                    self.destroy(ctxt, other_assembly_id)
 
     def _parse_server_url(self, heat_output):
         """Parse server url from heat-stack-show output."""
