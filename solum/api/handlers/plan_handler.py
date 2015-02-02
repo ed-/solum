@@ -24,7 +24,8 @@ from oslo.config import cfg
 from solum.api.handlers import handler
 from solum.common import clients
 from solum import objects
-
+from solum.openstack.common import log as logging
+from solum.worker import api as worker_api
 
 API_PARAMETER_OPTS = [
     cfg.StrOpt('system_param_store',
@@ -41,6 +42,8 @@ API_PARAMETER_OPTS = [
 
 CONF = cfg.CONF
 CONF.register_opts(API_PARAMETER_OPTS, group='api')
+
+LOG = logging.getLogger(__name__)
 
 sys_param_store = CONF.api.system_param_store
 
@@ -184,9 +187,10 @@ class PlanHandler(handler.Handler):
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
         # assemblyHandler.get_all_by_plan_id()
+        import pdb; pdb.set_trace()
         assemblies = objects.registry.Assembly.get_all_by_plan_id(plan_id)
 
-        api.API(context=self.context).perform_action(
+        worker_api.API(context=self.context).perform_action(
             verb=verb,
             build_id=image.id,
             git_info=git_info,

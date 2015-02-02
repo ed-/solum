@@ -27,7 +27,7 @@ from solum import objects
 from solum.objects import assembly
 from solum.objects import image
 from solum.openstack.common import log as logging
-from solum.worker import api
+from solum.worker import api as worker_api
 
 # Register options for the service
 API_SERVICE_OPTS = [
@@ -114,7 +114,7 @@ class AssemblyHandler(handler.Handler):
                         status_url=None):
 
         # This is a tempory hack so we don't need the build client
-        # in the requirments.
+        # in the requirements.
         image = objects.registry.Image()
         image.name = artifact['name']
         image.source_uri = artifact['content']['href']
@@ -141,7 +141,7 @@ class AssemblyHandler(handler.Handler):
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
-        api.API(context=self.context).perform_action(
+        worker_api.API(context=self.context).perform_action(
             verb=verb,
             build_id=image.id,
             git_info=git_info,
