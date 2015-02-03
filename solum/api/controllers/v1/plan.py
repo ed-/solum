@@ -27,6 +27,9 @@ from solum.api.handlers import plan_handler
 from solum.common import exception
 from solum.common import yamlutils
 from solum import objects
+from solum.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 def init_plan_v1(yml_input_plan):
@@ -65,8 +68,10 @@ def init_json_plan_by_version():
 
 def yaml_content(m):
     ref_content = m.refined_content()
-    ref_content['uri'] = '%s/v1/plans/%s' % (pecan.request.host_url,
-                                             m.uuid)
+    host_url = pecan.request.host_url
+    ref_content['uri'] = '%s/v1/plans/%s' % (host_url, m.uuid)
+    ref_content['trigger_uri'] = ('%s/v1/triggers/%s' %
+                                  (host_url, m.trigger_id))
     return ref_content
 
 

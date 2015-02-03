@@ -82,6 +82,7 @@ class PlanHandler(handler.Handler):
         db_obj.uuid = str(uuid.uuid4())
         db_obj.user_id = self.context.user
         db_obj.project_id = self.context.tenant
+        db_obj.trigger_id = str(uuid.uuid4())
         sys_params = {}
         deploy_keys = []
         for artifact in data.get('artifacts', []):

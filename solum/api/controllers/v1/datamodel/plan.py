@@ -145,9 +145,8 @@ class Plan(api_types.Base):
         json['uri'] = '%s/v1/%s/%s' % (host_url, m.__resource__, m.uuid)
         if m.raw_content is not None:
             json.update(m.raw_content)
-        json['trigger_uri'] = '%s/v1/triggers/%s' % (host_url, m.trigger_id)
         del json['id']
-        return cls(**(json))
+        return obj 
 
     def as_dict(self, db_model):
         base = super(Plan, self).as_dict(db_model)
