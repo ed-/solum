@@ -28,6 +28,7 @@ from solum.objects import assembly
 from solum.objects import image
 from solum.openstack.common import log as logging
 from solum.worker import api as worker_api
+from sqlalchemy.orm import exc
 
 # Register options for the service
 API_SERVICE_OPTS = [
@@ -60,6 +61,10 @@ class AssemblyHandler(handler.Handler):
         """Return an assembly."""
         return objects.registry.Assembly.get_by_uuid(self.context, id)
 
+    def get_by_plan_id(self, plan_id):
+        """Return all assemblies built with the provided plan."""
+        return objects.registry.AssemblyList.get_all(self.context).filter_by(plan_id=plan_id).one()
+
     def update(self, id, data):
         """Modify a resource."""
         updated = objects.registry.Assembly.safe_update(self.context, id, data)
@@ -68,10 +73,6 @@ class AssemblyHandler(handler.Handler):
     def delete(self, id):
         """Delete a resource."""
         db_obj = objects.registry.Assembly.get_by_uuid(self.context, id)
-
-        # delete the trust.
-        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
-        ksc.delete_trust(db_obj.trust_id)
 
         conductor_api.API(context=self.context).update_assembly(
             db_obj.id, {'status': ASSEMBLY_STATES.DELETING})
@@ -87,11 +88,6 @@ class AssemblyHandler(handler.Handler):
         db_obj.user_id = self.context.user
         db_obj.project_id = self.context.tenant
         db_obj.username = self.context.user_name
-
-        # create the trust_id and store it.
-        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
-        trust_context = ksc.create_trust_context()
-        db_obj.trust_id = trust_context.trust_id
 
         db_obj.status = ASSEMBLY_STATES.QUEUED
         db_obj.create(self.context)
@@ -153,4 +149,4 @@ class AssemblyHandler(handler.Handler):
 
     def get_all_by_plan_id(self, plan_id):
         """Return all assemblies built with the provided plan."""
-        return self.get_all().filter_by(plan_id=plan_id)
+        return objects.registry.AssemblyList.get_all(self.context).filter_by(plan_id=plan_id)

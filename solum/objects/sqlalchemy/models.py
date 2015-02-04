@@ -25,7 +25,6 @@ import six
 from six import moves
 from sqlalchemy import exc as sqla_exc
 from sqlalchemy.ext import declarative
-from sqlalchemy.orm import exc
 from sqlalchemy import types
 
 from solum.common import exception

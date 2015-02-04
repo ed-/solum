@@ -29,10 +29,16 @@ down_revision = '2c058b5051e4'
 def upgrade():
     op.add_column('plan',
                   sa.Column('trigger_id', sa.String(length=36)))
+    op.add_column('plan',
+                  sa.Column('trust_id', sa.String(length=255)))
     op.drop_column('assembly', 'trigger_id')
+    op.drop_column('assembly', 'trust_id')
 
 
 def downgrade():
     op.add_column('assembly',
                   sa.Column('trigger_id', sa.String(length=36)))
+    op.add_column('assembly',
+                  sa.Column('trust_id', sa.String(length=255)))
     op.drop_column('plan', 'trigger_id')
+    op.drop_column('plan', 'trust_id')

@@ -19,6 +19,7 @@ from solum import objects
 from solum.objects import assembly as abstract
 from solum.objects.sqlalchemy import component
 from solum.objects.sqlalchemy import models as sql
+from sqlalchemy.orm import exc
 
 ASSEMBLY_STATES = abstract.States
 
@@ -34,7 +35,6 @@ class Assembly(sql.Base, abstract.Assembly):
     uuid = sa.Column(sa.String(36), nullable=False)
     project_id = sa.Column(sa.String(36))
     user_id = sa.Column(sa.String(36))
-    trust_id = sa.Column(sa.String(255))
     name = sa.Column(sa.String(100))
     description = sa.Column(sa.String(255))
     tags = sa.Column(sa.Text)

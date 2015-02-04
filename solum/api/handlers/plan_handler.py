@@ -25,8 +25,11 @@ from solum.api.handlers import handler
 from solum.common import clients
 from solum.common import context
 from solum.common import exception
+from solum.common import repo_utils
 from solum.common import solum_keystoneclient
 from solum import objects
+from solum.objects import assembly
+from solum.objects import image
 from solum.openstack.common import log as logging
 from solum.worker import api as worker_api
 
@@ -47,6 +50,9 @@ CONF = cfg.CONF
 CONF.register_opts(API_PARAMETER_OPTS, group='api')
 
 LOG = logging.getLogger(__name__)
+
+ASSEMBLY_STATES = assembly.States
+IMAGE_STATES = image.States
 
 sys_param_store = CONF.api.system_param_store
 
@@ -75,6 +81,8 @@ class PlanHandler(handler.Handler):
         """Delete existing plan."""
         db_obj = objects.registry.Plan.get_by_uuid(self.context, id)
         self._delete_params(db_obj.id)
+        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
+        ksc.delete_trust(db_obj.trust_id)
         db_obj.destroy(self.context)
 
     def create(self, data):
@@ -129,6 +137,11 @@ class PlanHandler(handler.Handler):
                 sys_params['REPO_DEPLOY_KEYS'] = repo_deploy_keys
         db_obj.raw_content = dict((k, v) for k, v in data.items()
                                   if k != 'parameters')
+
+        ksc = solum_keystoneclient.KeystoneClientV3(self.context)
+        trust_context = ksc.create_trust_context()
+        db_obj.trust_id = trust_context.trust_id
+
         db_obj.create(self.context)
 
         user_params = data.get('parameters')
@@ -196,9 +209,10 @@ class PlanHandler(handler.Handler):
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
         # assemblyHandler.get_all_by_plan_id()
-        import pdb; pdb.set_trace()
-        assemblies = objects.registry.Assembly.get_all_by_plan_id(plan_id)
+        #assemblies = objects.registry.Assembly.get_all_by_plan_id(
+        #    self.context, plan_id)
 
+        '''
         worker_api.API(context=self.context).perform_action(
             verb=verb,
             build_id=image.id,
@@ -209,6 +223,7 @@ class PlanHandler(handler.Handler):
             image_format=image.image_format,
             assembly_id=assem.id,
             test_cmd=test_cmd)
+        '''
 
     def _create_params(self, plan_id, user_params, sys_params):
         param_obj = objects.registry.Parameter()
