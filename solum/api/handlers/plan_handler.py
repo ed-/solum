@@ -23,6 +23,9 @@ from oslo.config import cfg
 
 from solum.api.handlers import handler
 from solum.common import clients
+from solum.common import context
+from solum.common import exception
+from solum.common import solum_keystoneclient
 from solum import objects
 from solum.openstack.common import log as logging
 from solum.worker import api as worker_api
@@ -135,6 +138,11 @@ class PlanHandler(handler.Handler):
     def get_all(self):
         """Return all plans."""
         return objects.registry.PlanList.get_all(self.context)
+
+    def _context_from_trust_id(self, trust_id):
+        cntx = context.RequestContext(trust_id=trust_id)
+        kc = solum_keystoneclient.KeystoneClientV3(cntx)
+        return kc.context
 
     def trigger_workflow(self, trigger_id, commit_sha='',
                          status_url=None, collab_url=None):

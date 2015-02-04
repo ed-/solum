@@ -60,11 +60,6 @@ class AssemblyHandler(handler.Handler):
         """Return an assembly."""
         return objects.registry.Assembly.get_by_uuid(self.context, id)
 
-    def _context_from_trust_id(self, trust_id):
-        cntx = context.RequestContext(trust_id=trust_id)
-        kc = solum_keystoneclient.KeystoneClientV3(cntx)
-        return kc.context
-
     def update(self, id, data):
         """Modify a resource."""
         updated = objects.registry.Assembly.safe_update(self.context, id, data)
