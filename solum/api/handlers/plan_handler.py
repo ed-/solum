@@ -22,6 +22,7 @@ from Crypto.PublicKey import RSA
 from oslo.config import cfg
 
 from solum.api.handlers import handler
+from solum.api.handlers import assembly_handler
 from solum.common import clients
 from solum.common import context
 from solum.common import exception
@@ -173,12 +174,12 @@ class PlanHandler(handler.Handler):
         artifacts = plan_obj.raw_content.get('artifacts', [])
         for arti in artifacts:
             if repo_utils.verify_artifact(arti, collab_url):
-                self._build_artifact(plan_obj.id, artifact=arti,
+                self._build_artifact(plan_obj, artifact=arti,
                                      commit_sha=commit_sha,
                                      status_url=status_url)
 
 
-    def _build_artifact(self, plan_id, artifact, verb='build', commit_sha='',
+    def _build_artifact(self, plan, artifact, verb='build', commit_sha='',
                         status_url=None):
 
         # This is a tempory hack so we don't need the build client
@@ -208,22 +209,23 @@ class PlanHandler(handler.Handler):
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
-        # assemblyHandler.get_all_by_plan_id()
-        #assemblies = objects.registry.Assembly.get_all_by_plan_id(
-        #    self.context, plan_id)
+        ahand = assembly_handler.AssemblyHandler(self.context)
+        old_assemblies = ahand.get_all_by_plan_id(plan.id)
 
-        '''
-        worker_api.API(context=self.context).perform_action(
-            verb=verb,
-            build_id=image.id,
-            git_info=git_info,
-            name=image.name,
-            base_image_id=image.base_image_id,
-            source_format=image.source_format,
-            image_format=image.image_format,
-            assembly_id=assem.id,
-            test_cmd=test_cmd)
-        '''
+        try:
+            # Get json data out of plan
+            plandata = {
+                'plan_id': plan.id,
+                'name': plan.name,
+                }
+            ahand.create(plandata)
+            pass
+        except Exception:
+            LOG.exception("WUH OH!")
+        else:
+            if old_assemblies:
+                for a in old_assemblies:
+                    ahand.delete(a.uuid)
 
     def _create_params(self, plan_id, user_params, sys_params):
         param_obj = objects.registry.Parameter()

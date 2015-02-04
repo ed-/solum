@@ -61,10 +61,6 @@ class AssemblyHandler(handler.Handler):
         """Return an assembly."""
         return objects.registry.Assembly.get_by_uuid(self.context, id)
 
-    def get_by_plan_id(self, plan_id):
-        """Return all assemblies built with the provided plan."""
-        return objects.registry.AssemblyList.get_all(self.context).filter_by(plan_id=plan_id).one()
-
     def update(self, id, data):
         """Modify a resource."""
         updated = objects.registry.Assembly.safe_update(self.context, id, data)
@@ -149,4 +145,4 @@ class AssemblyHandler(handler.Handler):
 
     def get_all_by_plan_id(self, plan_id):
         """Return all assemblies built with the provided plan."""
-        return objects.registry.AssemblyList.get_all(self.context).filter_by(plan_id=plan_id)
+        return objects.registry.AssemblyList.get_all_by_plan_id(self.context, plan_id)

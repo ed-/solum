@@ -97,8 +97,12 @@ class AssemblyList(abstract.AssemblyList):
 
     @classmethod
     def get_all_by_plan_id(cls, context, p_id):
+        import pdb; pdb.set_trace()
         try:
             session = sql.SolumBase.get_session()
-            return session.query(cls).filter_by(plan_id=p_id).all()
+            mq = session.query(Assembly)
+            mq = mq.filter_by(plan_id=p_id)
+            #mq = mq.all()
+            return AssemblyList(mq)
         except exc.NoResultFound:
             return None

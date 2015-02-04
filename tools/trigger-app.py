@@ -46,7 +46,7 @@ def _get_solum_client():
 
 def main(args):
     client = _get_solum_client()
-    plan = client.plans.find(name_or_id=args.plan)
+    plan = client.plans.find(name_or_id=args.app)
     status_url = 'https://api.github.com/repos/{repo}/statuses/{sha}'.format(
         repo=args.repo, sha=args.sha)
     body_dict = {'sender': {'url': 'https://api.github.com'},
@@ -59,7 +59,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('plan', help="plan name/UUID")
+    parser.add_argument('app', help="app name/UUID")
     parser.add_argument('--sha', default='xyz', dest='sha',
                         help="the commit sha to clone from")
     parser.add_argument('--repo', default='u/r', dest='repo',
