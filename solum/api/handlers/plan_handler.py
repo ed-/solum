@@ -197,6 +197,7 @@ class PlanHandler(handler.Handler):
         image.state = IMAGE_STATES.PENDING
         image.create(self.context)
         test_cmd = artifact.get('unittest_cmd')
+        run_cmd = artifact.get('run_cmd')
         repo_token = artifact.get('repo_token')
 
         git_info = {
