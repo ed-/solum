@@ -18,6 +18,7 @@ import os
 
 from oslo.config import cfg
 
+from solum.deployer import api as deployer_api
 from solum.objects import assembly
 from solum.openstack.common import log as logging
 from solum.openstack.common import uuidutils
@@ -34,7 +35,7 @@ update_assembly_status = shell_handler.update_assembly_status
 class Handler(shell_handler.Handler):
     def build(self, ctxt, build_id, git_info, name, base_image_id,
               source_format, image_format, assembly_id,
-              test_cmd, run_cmd, artifact_type=None):
+              test_cmd, run_cmd, artifact_type=None, others=None):
 
         # TODO(datsun180b): This is only temporary, until Mistral becomes our
         # workflow engine.
@@ -45,6 +46,10 @@ class Handler(shell_handler.Handler):
         # Deployer is normally in charge of declaring an assembly READY.
         if ret_code == 0:
             update_assembly_status(ctxt, assembly_id, ASSEMBLY_STATES.READY)
+
+        if others is not None:
+            for other_id in others:
+                deployer_api.API(context=ctxt).destroy(assembly_id=other_id)
 
     def _get_environment(self, ctxt, source_uri, assembly_id=None,
                          test_cmd=None, run_cmd=None):

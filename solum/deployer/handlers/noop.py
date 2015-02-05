@@ -24,7 +24,7 @@ class Handler(object):
     def echo(self, ctxt, message):
         LOG.debug("%s" % message)
 
-    def deploy(self, ctxt, assembly_id, image_id):
+    def deploy(self, ctxt, assembly_id, image_id, others=None):
         message = ("Deploy %s %s" % (assembly_id, image_id))
         LOG.debug("%s" % message)
 

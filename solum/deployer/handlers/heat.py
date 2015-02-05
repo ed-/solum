@@ -118,7 +118,7 @@ class Handler(object):
             update_assembly(ctxt, assem_id,
                             {'status': STATES.ERROR_STACK_DELETE_FAILED})
 
-    def deploy(self, ctxt, assembly_id, image_id):
+    def deploy(self, ctxt, assembly_id, image_id, others=None):
         osc = clients.OpenStackClients(ctxt)
 
         assem = objects.registry.Assembly.get_by_id(ctxt,
@@ -234,6 +234,7 @@ class Handler(object):
             return
 
         host_url = self._parse_server_url(stack)
+        assembly_ok = False
         if host_url is not None:
             du_is_up = False
             to_upd = {'status': STATES.WAITING_FOR_DOCKER_DU,
@@ -263,6 +264,7 @@ class Handler(object):
                 to_update = {'status': STATES.READY,
                              'application_uri': host_url}
                 update_assembly(ctxt, assembly_id, to_update)
+                assembly_ok = True
             else:
                 to_upd = {'status': STATES.ERROR_DU_CREATION}
                 update_assembly(ctxt, assembly_id, to_upd)
@@ -270,6 +272,10 @@ class Handler(object):
             LOG.exception("Could not parse url from heat stack.")
             update_assembly(ctxt, assembly_id,
                             {'status': STATES.ERROR})
+        if assembly_ok:
+            if others is not None:
+                for other_assembly_id in others:
+                    self.destroy(ctxt, other_assembly_id)
 
     def _parse_server_url(self, heat_output):
         """Parse server url from heat-stack-show output."""

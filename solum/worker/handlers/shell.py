@@ -254,7 +254,7 @@ class Handler(object):
 
     def build(self, ctxt, build_id, git_info, name, base_image_id,
               source_format, image_format, assembly_id,
-              test_cmd, run_cmd, artifact_type=None):
+              test_cmd, run_cmd, artifact_type=None, others=None):
         if artifact_type == 'language_pack':
             self.build_lp(ctxt, build_id, git_info, name, source_format,
                           image_format, artifact_type)
@@ -349,7 +349,8 @@ class Handler(object):
                                     assembly_id=assembly_id)
             update_assembly_status(ctxt, assembly_id, ASSEMBLY_STATES.BUILT)
             deployer_api.API(context=ctxt).deploy(assembly_id=assembly_id,
-                                                  image_id=created_image_id)
+                                                  image_id=created_image_id,
+                                                  others=others)
         else:
             job_update_notification(ctxt, build_id, IMAGE_STATES.ERROR,
                                     description='image not created',

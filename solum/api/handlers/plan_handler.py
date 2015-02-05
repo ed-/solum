@@ -211,7 +211,7 @@ class PlanHandler(handler.Handler):
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
         ahand = assembly_handler.AssemblyHandler(self.context)
-        old_assemblies = ahand.get_all_by_plan_id(plan.id)
+        old_assemblies = [a.uuid for a in ahand.get_all_by_plan_id(plan.id)]
 
         try:
             # Get json data out of plan
@@ -219,14 +219,10 @@ class PlanHandler(handler.Handler):
                 'plan_id': plan.id,
                 'name': plan.name,
                 }
-            ahand.create(plandata)
+            ahand.create(plandata, others=old_assemblies)
             pass
         except Exception:
             LOG.exception("WUH OH!")
-        else:
-            if old_assemblies:
-                for a in old_assemblies:
-                    ahand.delete(a.uuid)
 
     def _create_params(self, plan_id, user_params, sys_params):
         param_obj = objects.registry.Parameter()

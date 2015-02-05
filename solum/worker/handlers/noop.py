@@ -25,7 +25,7 @@ class Handler(object):
 
     def build(self, ctxt, build_id, source_uri, name, base_image_id,
               source_format, image_format, assembly_id,
-              test_cmd, artifact_type=None):
+              test_cmd, artifact_type=None, others=None):
         args = [build_id, source_uri, name, base_image_id, source_format,
                 image_format, assembly_id, test_cmd, artifact_type]
         message = 'Build ' + ', '.join([str(a) for a in args])
