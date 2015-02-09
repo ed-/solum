@@ -210,8 +210,8 @@ class PlanHandler(handler.Handler):
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
-        ahand = assembly_handler.AssemblyHandler(self.context)
-        old_assemblies = [a.uuid for a in ahand.get_all_by_plan_id(plan.id)]
+        #ahand = assembly_handler.AssemblyHandler(self.context)
+        #old_assemblies = [a.uuid for a in ahand.get_all_by_plan_id(plan.id)]
 
         try:
             # Get json data out of plan
@@ -219,8 +219,7 @@ class PlanHandler(handler.Handler):
                 'plan_id': plan.id,
                 'name': plan.name,
                 }
-            ahand.create(plandata, others=old_assemblies)
-            pass
+            ahand.create(plandata)
         except Exception:
             LOG.exception("WUH OH!")
 

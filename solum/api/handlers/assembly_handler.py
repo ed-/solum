@@ -76,7 +76,7 @@ class AssemblyHandler(handler.Handler):
         deploy_api.API(context=self.context).destroy(
             assem_id=db_obj.id)
 
-    def create(self, data, others=None):
+    def create(self, data):
         """Create a new resource."""
         db_obj = objects.registry.Assembly()
         db_obj.update(data)
@@ -93,11 +93,11 @@ class AssemblyHandler(handler.Handler):
 
         artifacts = plan_obj.raw_content.get('artifacts', [])
         for arti in artifacts:
-            self._build_artifact(assem=db_obj, artifact=arti, others=others)
+            self._build_artifact(assem=db_obj, artifact=arti)
         return db_obj
 
     def _build_artifact(self, assem, artifact, verb='build', commit_sha='',
-                        status_url=None, others=None):
+                        status_url=None):
 
         # This is a tempory hack so we don't need the build client
         # in the requirements.
@@ -137,8 +137,7 @@ class AssemblyHandler(handler.Handler):
             image_format=image.image_format,
             assembly_id=assem.id,
             test_cmd=test_cmd,
-            run_cmd=run_cmd,
-            others=others)
+            run_cmd=run_cmd)
 
     def get_all(self):
         """Return all assemblies, based on the query provided."""
