@@ -14,7 +14,7 @@
 """Move triggers from Assembly to Plan
 
 Revision ID: 2e2f66dd6693
-Revises: 2c058b5051e4
+Revises: 176c26131889
 Create Date: 2015-01-23 20:29:32.186880
 
 """
@@ -23,7 +23,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '2e2f66dd6693'
-down_revision = '2c058b5051e4'
+down_revision = '176c26131889'
 
 
 def upgrade():

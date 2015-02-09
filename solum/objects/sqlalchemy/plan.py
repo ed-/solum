@@ -14,6 +14,7 @@
 
 import sqlalchemy as sa
 
+from solum.common import exception
 from solum.objects import plan as abstract
 from solum.objects.sqlalchemy import models as sql
 
@@ -25,8 +26,7 @@ class Plan(sql.Base, abstract.Plan):
     __tablename__ = 'plan'
     __table_args__ = sql.table_args()
 
-    id = sa.Column(sa.Integer, primary_key=True,
-                           autoincrement=True)
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36))
     project_id = sa.Column(sa.String(36))
     user_id = sa.Column(sa.String(36))
@@ -51,7 +51,6 @@ class Plan(sql.Base, abstract.Plan):
 
     def _non_updatable_fields(self):
         return set(('uuid', 'id', 'project_id'))
-
 
     def refined_content(self):
         if self.raw_content and self.uuid:

@@ -18,7 +18,6 @@ import os
 
 from oslo.config import cfg
 
-from solum.deployer import api as deployer_api
 from solum.objects import assembly
 from solum.openstack.common import log as logging
 from solum.openstack.common import uuidutils

@@ -21,8 +21,8 @@ import uuid
 from Crypto.PublicKey import RSA
 from oslo.config import cfg
 
-from solum.api.handlers import handler
 from solum.api.handlers import assembly_handler
+from solum.api.handlers import handler
 from solum.common import clients
 from solum.common import context
 from solum.common import exception
@@ -32,7 +32,6 @@ from solum import objects
 from solum.objects import assembly
 from solum.objects import image
 from solum.openstack.common import log as logging
-from solum.worker import api as worker_api
 
 API_PARAMETER_OPTS = [
     cfg.StrOpt('system_param_store',
@@ -178,7 +177,6 @@ class PlanHandler(handler.Handler):
                                      commit_sha=commit_sha,
                                      status_url=status_url)
 
-
     def _build_artifact(self, plan, artifact, verb='build', commit_sha='',
                         status_url=None):
 
@@ -197,21 +195,22 @@ class PlanHandler(handler.Handler):
         image.state = IMAGE_STATES.PENDING
         image.create(self.context)
         test_cmd = artifact.get('unittest_cmd')
-        run_cmd = artifact.get('run_cmd')
+        # run_cmd = artifact.get('run_cmd')
         repo_token = artifact.get('repo_token')
 
+        '''
         git_info = {
             'source_url': image.source_uri,
             'commit_sha': commit_sha,
             'repo_token': repo_token,
             'status_url': status_url
         }
+        '''
 
         if test_cmd:
             repo_utils.send_status(0, status_url, repo_token, pending=True)
 
-        #ahand = assembly_handler.AssemblyHandler(self.context)
-        #old_assemblies = [a.uuid for a in ahand.get_all_by_plan_id(plan.id)]
+        ahand = assembly_handler.AssemblyHandler(self.context)
 
         try:
             # Get json data out of plan

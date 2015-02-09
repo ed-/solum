@@ -146,7 +146,8 @@ class Plan(api_types.Base):
         if m.raw_content is not None:
             json.update(m.raw_content)
         del json['id']
-        return obj 
+        obj = cls(**(json))
+        return obj
 
     def as_dict(self, db_model):
         base = super(Plan, self).as_dict(db_model)

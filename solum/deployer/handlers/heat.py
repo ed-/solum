@@ -211,7 +211,8 @@ class Handler(object):
                 return
         update_assembly(ctxt, assembly_id, {'status': STATES.DEPLOYING})
 
-        self._check_stack_status(ctxt, assembly_id, osc, stack_id, assem.plan_id)
+        self._check_stack_status(ctxt, assembly_id, osc, stack_id,
+                                 assem.plan_id)
 
     def _check_stack_status(self, ctxt, assembly_id, osc, stack_id, plan_id):
 
@@ -274,7 +275,6 @@ class Handler(object):
             update_assembly(ctxt, assembly_id,
                             {'status': STATES.ERROR})
         if assembly_ok:
-            #TODO THIS IS WHERE THE THING GOES
             ahand = assembly_handler.AssemblyHandler(ctxt)
             others = [a.uuid for a in ahand.get_all_by_plan_id(plan_id)]
             if others is not None:

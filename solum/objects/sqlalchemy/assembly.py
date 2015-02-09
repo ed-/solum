@@ -13,13 +13,12 @@
 # under the License.
 
 import sqlalchemy as sa
+from sqlalchemy.orm import exc
 
-from solum.common import exception
 from solum import objects
 from solum.objects import assembly as abstract
 from solum.objects.sqlalchemy import component
 from solum.objects.sqlalchemy import models as sql
-from sqlalchemy.orm import exc
 
 ASSEMBLY_STATES = abstract.States
 
@@ -101,7 +100,6 @@ class AssemblyList(abstract.AssemblyList):
             session = sql.SolumBase.get_session()
             mq = session.query(Assembly)
             mq = mq.filter_by(plan_id=p_id)
-            #mq = mq.all()
             return AssemblyList(mq)
         except exc.NoResultFound:
             return None

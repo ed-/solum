@@ -17,10 +17,7 @@ import uuid
 from oslo.config import cfg
 
 from solum.api.handlers import handler
-from solum.common import context
-from solum.common import exception
 from solum.common import repo_utils
-from solum.common import solum_keystoneclient
 from solum.conductor import api as conductor_api
 from solum.deployer import api as deploy_api
 from solum import objects
@@ -28,7 +25,6 @@ from solum.objects import assembly
 from solum.objects import image
 from solum.openstack.common import log as logging
 from solum.worker import api as worker_api
-from sqlalchemy.orm import exc
 
 # Register options for the service
 API_SERVICE_OPTS = [
@@ -145,4 +141,5 @@ class AssemblyHandler(handler.Handler):
 
     def get_all_by_plan_id(self, plan_id):
         """Return all assemblies built with the provided plan."""
-        return objects.registry.AssemblyList.get_all_by_plan_id(self.context, plan_id)
+        return objects.registry.AssemblyList.get_all_by_plan_id(self.context,
+                                                                plan_id)
