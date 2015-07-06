@@ -27,7 +27,8 @@ class WorkflowHandler(handler.Handler):
 
     def get(self, id):
         """Return a workflow."""
-        return objects.registry.Workflow.get_by_uuid(self.context, id)
+        #return objects.registry.Workflow.get_by_uuid(self.context, id)
+        return objects.registry.Workflow(wf_id=id)
 
     def delete(self, id):
         """Delete an existing workflow."""
@@ -54,7 +55,8 @@ class WorkflowHandler(handler.Handler):
 
     def get_all(self, app_id=None):
         """Return all of an app's workflows."""
-        all_apps = objects.registry.AppList.get_all(self.context)
-        if app_id is not None:
-            all_apps = all_apps.filter_by(app_id=app_id)
-        return all_apps
+        #all_wfs = objects.registry.WorkflowList.get_all(self.context)
+        #if app_id_id is not None:
+        #    all_wfs = all_wfs.filter_by(app_id=app_id)
+        #return all_wfs
+        return []

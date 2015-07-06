@@ -28,10 +28,37 @@ LOG = logging.getLogger(__name__)
 class WorkflowController(rest.RestController):
     """Manages operations on a single workflow."""
 
+    def __init__(self, app_id, wf_id):
+        super(WorkflowController, self).__init__(self)
+        self.app_id = app_id
+        self.wf_id = app_id
+
+    @exception.wrap_pecan_controller_exception
+    @pecan.expose('json')
+    def get(self):
+        """Return this workflow."""
+        request.check_request_for_https()
+        '''
+        handler = wf_handler.WorkflowHandler(pecan.request.security_context)
+        wf_model = handler.get(self.wf_id)
+        wf_model = workflow.Workflow.from_db_model(wf_model,
+                                                   pecan.request.host_url)
+        return wf_model
+        '''
+        return {'app_id': self.app_id, 'wf_id': self.wf_id}
+
+
+class WorkflowsController(rest.RestController):
+    """Manages operations on all of an app's workflows."""
+
+    def __init__(self, app_id):
+        super(WorkflowsController, self).__init__(self)
+        self.app_id = app_id
+
     @exception.wrap_pecan_controller_exception
     @pecan.expose()
-    def get(self, app_id, wf_id):
-        """Return this workflow."""
+    def gret(self, wf_id):
+        """Return one workflow."""
         request.check_request_for_https()
         handler = wf_handler.WorkflowHandler(pecan.request.security_context)
         wf_model = handler.get(wf_id)
@@ -39,15 +66,12 @@ class WorkflowController(rest.RestController):
                                                    pecan.request.host_url)
         return wf_model
 
-
-class WorkflowsController(rest.RestController):
-    """Manages operations on all of an app's workflows."""
-
     @pecan.expose()
     def _lookup(self, wf_uuid, *remainder):
         if remainder and not remainder[-1]:
             remainder = remainder[:-1]
-        return WorkflowController(wf_uuid), remainder
+        LOG.debug("HONK HONK")
+        return WorkflowController(self.app_id, wf_uuid), remainder
 
     @exception.wrap_pecan_controller_exception
     @wsme_pecan.wsexpose(workflow.Workflow, status_code=200)
