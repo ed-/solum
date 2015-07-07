@@ -57,17 +57,6 @@ class WorkflowsController(rest.RestController):
         super(WorkflowsController, self).__init__(self)
         self.app_id = app_id
 
-    @exception.wrap_pecan_controller_exception
-    @pecan.expose()
-    def gret(self, wf_id):
-        """Return one workflow."""
-        request.check_request_for_https()
-        handler = wf_handler.WorkflowHandler(pecan.request.security_context)
-        wf_model = handler.get(wf_id)
-        wf_model = workflow.Workflow.from_db_model(wf_model,
-                                                   pecan.request.host_url)
-        return wf_model
-
     @pecan.expose()
     def _lookup(self, wf_uuid, *remainder):
         if remainder and not remainder[-1]:
@@ -80,6 +69,7 @@ class WorkflowsController(rest.RestController):
     def post(self):
         """Create a new workflow for an app."""
         request.check_request_for_https()
+        import pdb; pdb.set_trace()
         wf_data = {}
         if pecan.request.body and len(pecan.request.body) > 0:
             try:
