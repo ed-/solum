@@ -27,7 +27,7 @@ class Workflow(api_types.Base):
     
     id = wtypes.text
     app_id = wtypes.text
-    wf_id = wtypes.IntegerType
+    wf_id = int
     source = {wtypes.text: wtypes.text}
     config = {wtypes.text: wtypes.text}
     actions = {wtypes.text: wtypes.text}
@@ -49,8 +49,8 @@ class Workflow(api_types.Base):
         json = m.as_dict()
         json['type'] = m.__tablename__
         json['uri'] = ''
-        #json['uri'] = ('%s/v1/apps/%s/workflows/%s' %
-        #               (host_url, m.app_id, m.wf_id))
+        json['uri'] = ('%s/v1/apps/%s/workflows/%s' %
+                       (host_url, m.app_id, m.wf_id))
         return cls(**(json))
 
     def as_dict(self, db_model):

@@ -36,18 +36,15 @@ class WorkflowController(rest.RestController):
         self.wf_id = wf_id
 
     @exception.wrap_pecan_controller_exception
-    @pecan.expose('json')
+    @wsme_pecan.wsexpose(workflow.Workflow)
     def get(self):
         """Return this workflow."""
         request.check_request_for_https()
-        '''
         handler = wf_handler.WorkflowHandler(pecan.request.security_context)
         wf_model = handler.get(self.wf_id)
         wf_model = workflow.Workflow.from_db_model(wf_model,
                                                    pecan.request.host_url)
         return wf_model
-        '''
-        return {'app_id': self.app_id, 'wf_id': self.wf_id}
 
 
 class WorkflowsController(rest.RestController):
@@ -61,7 +58,6 @@ class WorkflowsController(rest.RestController):
     def _lookup(self, wf_uuid, *remainder):
         if remainder and not remainder[-1]:
             remainder = remainder[:-1]
-        LOG.debug("HONK HONK")
         return WorkflowController(self.app_id, wf_uuid), remainder
 
     @exception.wrap_pecan_controller_exception
@@ -69,7 +65,6 @@ class WorkflowsController(rest.RestController):
     def post(self):
         """Create a new workflow for an app."""
         request.check_request_for_https()
-        import pdb; pdb.set_trace()
         wf_data = {}
         if pecan.request.body and len(pecan.request.body) > 0:
             try:
@@ -94,5 +89,5 @@ class WorkflowsController(rest.RestController):
         app_model = ahandler.get(self.app_id)
         handler = wf_handler.WorkflowHandler(pecan.request.security_context)
         all_wfs = [workflow.Workflow.from_db_model(obj, pecan.request.host_url)
-                   for obj in handler.get_all()]
+                   for obj in handler.get_all(app_id=self.app_id)]
         return all_wfs

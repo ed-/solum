@@ -64,6 +64,8 @@ class WorkflowList(abstract.WorkflowList):
     """Represent a list of app workflows in sqlalchemy."""
 
     @classmethod
-    def get_all(cls, context):
-        return WorkflowList(sql.model_query(context, Workflow))
-
+    def get_all(cls, context, app_id=None):
+        wfs = sql.model_query(context, Workflow)
+        if app_id is not None:
+            wfs = wfs.filter_by(app_id=app_id)
+        return WorkflowList(wfs)
