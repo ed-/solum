@@ -16,7 +16,9 @@ import pecan
 from pecan import rest
 import wsmeext.pecan as wsme_pecan
 
+from solum.api.controllers.v1.datamodel import app
 from solum.api.controllers.v1.datamodel import workflow
+from solum.api.handlers import app_handler
 from solum.api.handlers import workflow_handler as wf_handler
 from solum.common import exception
 from solum.common import request
@@ -31,7 +33,7 @@ class WorkflowController(rest.RestController):
     def __init__(self, app_id, wf_id):
         super(WorkflowController, self).__init__(self)
         self.app_id = app_id
-        self.wf_id = app_id
+        self.wf_id = wf_id
 
     @exception.wrap_pecan_controller_exception
     @pecan.expose('json')
@@ -98,6 +100,8 @@ class WorkflowsController(rest.RestController):
     def get_all(self):
         """Return all of one app's workflows, based on the query provided."""
         request.check_request_for_https()
+        ahandler = app_handler.AppHandler(pecan.request.security_context)
+        app_model = ahandler.get(self.app_id)
         handler = wf_handler.WorkflowHandler(pecan.request.security_context)
         all_wfs = [workflow.Workflow.from_db_model(obj, pecan.request.host_url)
                    for obj in handler.get_all()]

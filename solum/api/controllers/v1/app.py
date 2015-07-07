@@ -29,15 +29,16 @@ LOG = logging.getLogger(__name__)
 class AppController(rest.RestController):
     """Manages operations on a single app."""
 
-    @pecan.expose()
-    def _lookup(self, app_id, *remainder):
-        if remainder and not remainder[-1]:
-            remainder = remainder[:-1]
-        return workflow.WorkflowsController(app_id), remainder
-
     def __init__(self, app_id):
         super(AppController, self).__init__()
         self._id = app_id
+
+    @pecan.expose()
+    def _lookup(self, resource, *remainder):
+        if remainder and not remainder[-1]:
+            remainder = remainder[:-1]
+        if resource == 'workflows':
+            return workflow.WorkflowsController(self._id), remainder
 
     @exception.wrap_pecan_controller_exception
     @wsme_pecan.wsexpose(app.App)
