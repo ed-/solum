@@ -13,6 +13,8 @@
 # under the License.
 
 
+import datetime
+
 import wsme
 from wsme import types as wtypes
 
@@ -36,6 +38,8 @@ class Workflow(wtypes.Base):
     "The resource type."
     
     id = wtypes.text
+    updated_at = datetime.datetime
+    created_at = datetime.datetime
     app_id = wtypes.text
     wf_id = int
     source = {wtypes.text: wtypes.text}

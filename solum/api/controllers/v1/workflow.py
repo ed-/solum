@@ -82,6 +82,9 @@ class WorkflowsController(rest.RestController):
         data.app_id = app_model.id
         data.config = app_model.workflow_config
         data.source = app_model.source
+
+        # TODO(datsun180b): Do this incrementing properly. This isn't any kind of safe at all.
+        # There isn't even a uniqueness constraint the table, though there ought to be.
         data.wf_id = len(all_wfs) + 1
 
         wf_data = data.as_dict(workflow.Workflow)

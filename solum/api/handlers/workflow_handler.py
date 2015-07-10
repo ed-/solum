@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import uuid
 
 from solum.api.handlers import handler
@@ -48,12 +49,9 @@ class WorkflowHandler(handler.Handler):
         db_obj.config = data['config']
         db_obj.actions = data['actions']
 
-        # Fetch this data from the parent app.
-        #db_obj.wf_id = max([0] + [wf.wf_id for wf in app.workflows]) + 1
-        #db_obj.source = app.source
-        #db_obj.config = app.workflow_config
-
-
+        now = datetime.datetime.utcnow()
+        db_obj.created_at = now
+        db_obj.updated_at = now
         db_obj.create(self.context)
         return db_obj
 
